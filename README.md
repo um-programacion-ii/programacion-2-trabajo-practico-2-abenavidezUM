@@ -392,3 +392,86 @@ El uso inadecuado de IA puede resultar en:
 ## 📝 Licencia
 
 Este trabajo es parte del curso de Programación Avanzada de Ingeniería en Informática. Uso educativo únicamente.
+
+# Sistema de Gestión de Biblioteca Digital
+
+Este proyecto implementa un sistema para gestionar una biblioteca digital con funcionalidades como categorización de recursos, búsquedas, y notificaciones básicas.
+
+## Requisitos
+
+- Java 21 o superior
+- Maven
+
+## Estructura del proyecto
+
+El proyecto está organizado en varios paquetes:
+
+- `sistema.biblioteca.modelos`: Clases que representan los objetos del dominio (Usuario, Libro, etc.)
+- `sistema.biblioteca.interfaces`: Interfaces que definen comportamientos comunes
+- `sistema.biblioteca.gestores`: Clases que implementan la lógica de negocio
+- `sistema.biblioteca.servicios`: Servicios para notificaciones
+- `sistema.biblioteca.excepciones`: Excepciones personalizadas
+
+## Cómo usar el sistema
+
+### Compilación
+
+Para compilar el proyecto, ejecuta:
+
+```bash
+mvn clean package
+```
+
+### Ejecución
+
+Para ejecutar la aplicación, usa:
+
+```bash
+java -cp target/gestion-biblioteca-1.0-SNAPSHOT.jar sistema.biblioteca.Main
+```
+
+### Funcionalidades implementadas
+
+1. **Gestión de Usuarios**
+   - Registrar usuarios
+   - Buscar usuarios por ID o nombre
+
+2. **Gestión de Recursos**
+   - Agregar diferentes tipos de recursos (libros, revistas, audiolibros)
+   - Buscar recursos por ID, título o categoría
+   - Consultar disponibilidad
+
+3. **Notificaciones Básicas**
+   - Envío de notificaciones simuladas por email y SMS
+
+## Ejemplo de uso básico
+
+```java
+// Crear gestores
+GestorUsuarios gestorUsuarios = new GestorUsuarios();
+GestorRecursos gestorRecursos = new GestorRecursos();
+ServicioNotificacionesEmail servicioEmail = new ServicioNotificacionesEmail();
+
+// Registrar un usuario
+Usuario usuario = new Usuario("U001", "Juan Pérez", "juan@ejemplo.com");
+gestorUsuarios.registrarUsuario(usuario);
+
+// Agregar un recurso
+Libro libro = new Libro("L001", "Java Programming", "Author", "123456", CategoriaRecurso.ACADEMICO);
+gestorRecursos.agregarRecurso(libro);
+
+// Enviar una notificación
+servicioEmail.enviarNotificacion(usuario, "Bienvenido al sistema de biblioteca");
+```
+
+## Próximas implementaciones
+
+En próximas versiones se implementarán funcionalidades adicionales como:
+- Sistema de préstamos y devoluciones
+- Reservas de recursos
+- Reportes estadísticos
+- Monitoreo automático de vencimientos
+
+## Contacto
+
+Si tenés dudas o consultas sobre el sistema, contactame a través de mi mail universitario.
