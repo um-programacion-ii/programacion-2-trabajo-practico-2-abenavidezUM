@@ -1,10 +1,16 @@
 package sistema.biblioteca;
 
+import sistema.biblioteca.excepciones.RecursoNoDisponibleException;
+import sistema.biblioteca.excepciones.UsuarioNoEncontradoException;
+import sistema.biblioteca.gestores.GestorPrestamos;
 import sistema.biblioteca.gestores.GestorRecursos;
 import sistema.biblioteca.gestores.GestorUsuarios;
 import sistema.biblioteca.modelos.*;
 import sistema.biblioteca.servicios.ServicioNotificacionesEmail;
 import sistema.biblioteca.servicios.ServicioNotificacionesSMS;
+
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class Main {
 
@@ -18,6 +24,9 @@ public class Main {
         // Crear servicios de notificaciones
         ServicioNotificacionesEmail servicioEmail = new ServicioNotificacionesEmail();
         ServicioNotificacionesSMS servicioSMS = new ServicioNotificacionesSMS();
+        
+        // Crear gestor de préstamos
+        GestorPrestamos gestorPrestamos = new GestorPrestamos(gestorRecursos, gestorUsuarios, servicioEmail);
         
         // Crear algunos datos de ejemplo
         crearDatosEjemplo(gestorUsuarios, gestorRecursos);
@@ -36,6 +45,13 @@ public class Main {
             System.out.println(usuario);
             // Enviar una notificación de prueba
             servicioEmail.enviarNotificacion(usuario, "Bienvenido al sistema de biblioteca digital!");
+        }
+        
+        // Realizar operaciones de préstamo
+        try {
+            realizarOperacionesPrestamo(gestorPrestamos);
+        } catch (Exception e) {
+            System.out.println("Error al realizar operaciones de préstamo: " + e.getMessage());
         }
         
         System.out.println("\nSistema finalizado.");
@@ -88,5 +104,56 @@ public class Main {
         gestorRecursos.contarRecursosPorCategoria().forEach((categoria, cantidad) -> 
             System.out.println(categoria + ": " + cantidad + " recursos")
         );
+    }
+    
+    private static void realizarOperacionesPrestamo(GestorPrestamos gestorPrestamos) 
+            throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        
+        System.out.println("\n=== OPERACIONES DE PRÉSTAMO ===");
+        
+        // Realizar un préstamo
+        Prestamo prestamo1 = gestorPrestamos.crearPrestamo("L001", "U001");
+        System.out.println("Préstamo creado: " + prestamo1);
+        System.out.println("Fecha devolución: " + 
+                formatearFecha(prestamo1.getFechaDevolucionEstimada()));
+        
+        // Realizar otro préstamo
+        Prestamo prestamo2 = gestorPrestamos.crearPrestamo("R001", "U002");
+        System.out.println("Préstamo creado: " + prestamo2);
+        
+        // Verificar préstamos activos
+        System.out.println("\n--- PRÉSTAMOS ACTIVOS ---");
+        for (Prestamo p : gestorPrestamos.listarPrestamosActivos()) {
+            System.out.println(p);
+        }
+        
+        // Devolver un préstamo
+        System.out.println("\n--- DEVOLUCIÓN DE PRÉSTAMO ---");
+        gestorPrestamos.devolverPrestamo(prestamo1.getId());
+        System.out.println("Préstamo devuelto: " + prestamo1.getId());
+        
+        // Mostrar préstamos activos después de la devolución
+        System.out.println("\n--- PRÉSTAMOS ACTIVOS DESPUÉS DE DEVOLUCIÓN ---");
+        List<Prestamo> prestamosActivos = gestorPrestamos.listarPrestamosActivos();
+        System.out.println("Cantidad de préstamos activos: " + prestamosActivos.size());
+        for (Prestamo p : prestamosActivos) {
+            System.out.println(p);
+        }
+        
+        // Intentar prestar un recurso no disponible (debería fallar)
+        try {
+            gestorPrestamos.crearPrestamo("R001", "U003"); // R001 ya está prestado a U002
+            System.out.println("Este código no debería ejecutarse");
+        } catch (RecursoNoDisponibleException e) {
+            System.out.println("\nError esperado al intentar prestar un recurso no disponible: " + e.getMessage());
+        }
+    }
+    
+    private static String formatearFecha(java.time.LocalDateTime fecha) {
+        if (fecha == null) {
+            return "N/A";
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        return fecha.format(formatter);
     }
 }
