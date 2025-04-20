@@ -395,7 +395,7 @@ Este trabajo es parte del curso de Programación Avanzada de Ingeniería en Info
 
 # Sistema de Gestión de Biblioteca Digital
 
-Este proyecto implementa un sistema para gestionar una biblioteca digital con funcionalidades como categorización de recursos, préstamos básicos de recursos, búsquedas y notificaciones.
+Este proyecto implementa un sistema para gestionar una biblioteca digital con funcionalidades como categorización de recursos, préstamos y reservas básicas, búsquedas y notificaciones.
 
 ## Requisitos
 
@@ -406,7 +406,7 @@ Este proyecto implementa un sistema para gestionar una biblioteca digital con fu
 
 El proyecto está organizado en varios paquetes:
 
-- `sistema.biblioteca.modelos`: Clases que representan los objetos del dominio (Usuario, Libro, Prestamo, etc.)
+- `sistema.biblioteca.modelos`: Clases que representan los objetos del dominio (Usuario, Libro, Prestamo, Reserva, etc.)
 - `sistema.biblioteca.interfaces`: Interfaces que definen comportamientos comunes
 - `sistema.biblioteca.gestores`: Clases que implementan la lógica de negocio
 - `sistema.biblioteca.servicios`: Servicios para notificaciones
@@ -441,13 +441,19 @@ java -cp target/gestion-biblioteca-1.0-SNAPSHOT.jar sistema.biblioteca.Main
    - Buscar recursos por ID, título o categoría
    - Consultar disponibilidad
 
-3. **Sistema de Préstamos** *(Nuevo)*
+3. **Sistema de Préstamos**
    - Prestar recursos a usuarios
    - Registrar devoluciones
    - Verificar préstamos activos
    - Manejo de errores para recursos no disponibles
 
-4. **Notificaciones Básicas**
+4. **Modelo de Reservas** *(Nuevo)*
+   - Creación de reservas para recursos
+   - Gestión de estados (pendiente, completada, expirada, cancelada)
+   - Control de fechas de expiración
+   - Extensión de reservas
+
+5. **Notificaciones Básicas**
    - Envío de notificaciones simuladas por email y SMS
 
 ## Ejemplo de uso básico
@@ -476,14 +482,21 @@ try {
     System.out.println("Error: " + e.getMessage());
 }
 
-// Devolver el recurso
-gestorPrestamos.devolverPrestamo(idPrestamo);
+// Crear una reserva para un recurso no disponible
+Reserva reserva = new Reserva("R001", libro, usuario, 5);
+System.out.println("Reserva creada con " + reserva.diasHastaExpiracion() + 
+    " días hasta expiración");
+
+// Extender la reserva
+reserva.extenderExpiracion(3);
+System.out.println("Reserva extendida. Nueva expiración: " + 
+    reserva.getFechaExpiracion());
 ```
 
 ## Próximas implementaciones
 
 En próximas versiones se implementarán funcionalidades adicionales como:
-- Sistema de reservas con manejo de concurrencia
+- Sistema de colas de reservas con concurrencia
 - Notificaciones asincrónicas
 - Reportes estadísticos
 - Monitoreo automático de vencimientos

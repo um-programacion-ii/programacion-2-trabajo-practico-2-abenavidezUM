@@ -11,6 +11,7 @@ import sistema.biblioteca.servicios.ServicioNotificacionesSMS;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 public class Main {
 
@@ -53,6 +54,9 @@ public class Main {
         } catch (Exception e) {
             System.out.println("Error al realizar operaciones de préstamo: " + e.getMessage());
         }
+        
+        // Mostrar ejemplo de reservas
+        mostrarEjemploReservas(gestorRecursos, gestorUsuarios);
         
         System.out.println("\nSistema finalizado.");
     }
@@ -146,6 +150,50 @@ public class Main {
             System.out.println("Este código no debería ejecutarse");
         } catch (RecursoNoDisponibleException e) {
             System.out.println("\nError esperado al intentar prestar un recurso no disponible: " + e.getMessage());
+        }
+    }
+    
+    private static void mostrarEjemploReservas(GestorRecursos gestorRecursos, GestorUsuarios gestorUsuarios) {
+        System.out.println("\n=== EJEMPLO DE RESERVAS ===");
+        
+        try {
+            // Obtener recursos y usuarios
+            RecursoBase recurso = gestorRecursos.buscarRecursoPorId("L002");
+            Usuario usuario = gestorUsuarios.buscarUsuarioPorId("U003");
+            
+            if (recurso != null && usuario != null) {
+                // Crear una reserva básica
+                String idReserva = "R-" + UUID.randomUUID().toString().substring(0, 8);
+                Reserva reserva = new Reserva(idReserva, recurso, usuario);
+                
+                System.out.println("Reserva creada: " + reserva);
+                System.out.println("Estado: " + reserva.getEstado());
+                System.out.println("Fecha de expiración: " + formatearFecha(reserva.getFechaExpiracion()));
+                System.out.println("Días hasta expiración: " + reserva.diasHastaExpiracion());
+                
+                // Extender la reserva
+                reserva.extenderExpiracion(5);
+                System.out.println("\nReserva extendida 5 días:");
+                System.out.println("Nueva fecha de expiración: " + formatearFecha(reserva.getFechaExpiracion()));
+                System.out.println("Días hasta expiración: " + reserva.diasHastaExpiracion());
+                
+                // Cancelar la reserva
+                reserva.cancelar();
+                System.out.println("\nReserva cancelada");
+                System.out.println("Estado actual: " + reserva.getEstado());
+                System.out.println("¿Está pendiente? " + reserva.estaPendiente());
+                System.out.println("¿Está cancelada? " + reserva.estaCancelada());
+                
+                // Crear otra reserva con días personalizados
+                String idReserva2 = "R-" + UUID.randomUUID().toString().substring(0, 8);
+                Reserva reserva2 = new Reserva(idReserva2, recurso, usuario, 7);
+                
+                System.out.println("\nNueva reserva con 7 días de expiración:");
+                System.out.println(reserva2);
+                System.out.println("Fecha de expiración: " + formatearFecha(reserva2.getFechaExpiracion()));
+            }
+        } catch (Exception e) {
+            System.out.println("Error al realizar ejemplo de reservas: " + e.getMessage());
         }
     }
     
