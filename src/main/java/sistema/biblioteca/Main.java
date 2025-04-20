@@ -6,12 +6,16 @@ import sistema.biblioteca.gestores.GestorPrestamos;
 import sistema.biblioteca.gestores.GestorRecursos;
 import sistema.biblioteca.gestores.GestorUsuarios;
 import sistema.biblioteca.modelos.*;
+import sistema.biblioteca.servicios.AdaptadorNotificaciones;
+import sistema.biblioteca.servicios.ProcesadorNotificaciones;
 import sistema.biblioteca.servicios.ServicioNotificacionesEmail;
 import sistema.biblioteca.servicios.ServicioNotificacionesSMS;
+import sistema.biblioteca.servicios.ServicioNotificaciones;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
@@ -26,8 +30,22 @@ public class Main {
         ServicioNotificacionesEmail servicioEmail = new ServicioNotificacionesEmail();
         ServicioNotificacionesSMS servicioSMS = new ServicioNotificacionesSMS();
         
-        // Crear gestor de préstamos
-        GestorPrestamos gestorPrestamos = new GestorPrestamos(gestorRecursos, gestorUsuarios, servicioEmail);
+        // Inicializar el procesador de notificaciones concurrente
+        ProcesadorNotificaciones procesadorNotificaciones = new ProcesadorNotificaciones();
+        
+        // Crear adaptadores para los servicios existentes
+        AdaptadorNotificaciones adaptadorEmail = new AdaptadorNotificaciones(
+                procesadorNotificaciones, "email", gestorUsuarios);
+        AdaptadorNotificaciones adaptadorSMS = new AdaptadorNotificaciones(
+                procesadorNotificaciones, "sms", gestorUsuarios);
+        
+        // Registrar los servicios en el procesador
+        procesadorNotificaciones.agregarServicio("email", servicioEmail);
+        procesadorNotificaciones.agregarServicio("sms", servicioSMS);
+        
+        // Crear gestor de préstamos usando el adaptador de notificaciones
+        GestorPrestamos gestorPrestamos = new GestorPrestamos(
+                gestorRecursos, gestorUsuarios, adaptadorEmail);
         
         // Crear algunos datos de ejemplo
         crearDatosEjemplo(gestorUsuarios, gestorRecursos);
@@ -44,9 +62,14 @@ public class Main {
         System.out.println("\n--- Búsqueda de usuarios por nombre 'García' ---");
         for (Usuario usuario : gestorUsuarios.buscarUsuariosPorNombre("García")) {
             System.out.println(usuario);
-            // Enviar una notificación de prueba
-            servicioEmail.enviarNotificacion(usuario, "Bienvenido al sistema de biblioteca digital!");
+            // Enviar notificaciones usando el adaptador (que usa el procesador concurrente)
+            adaptadorEmail.enviarNotificacion(usuario, "Bienvenido al sistema de biblioteca digital!");
+            adaptadorSMS.enviarNotificacion(usuario, "Nuevo sistema de notificaciones activado");
         }
+        
+        // Demostrar notificaciones múltiples
+        System.out.println("\n--- Ejemplo de notificaciones concurrentes ---");
+        demonstrarNotificacionesConcurrentes(procesadorNotificaciones, gestorUsuarios);
         
         // Realizar operaciones de préstamo
         try {
@@ -58,7 +81,67 @@ public class Main {
         // Mostrar ejemplo de reservas
         mostrarEjemploReservas(gestorRecursos, gestorUsuarios);
         
+        // Esperar a que terminen las notificaciones concurrentes
+        try {
+            System.out.println("\nEsperando a que se procesen las notificaciones...");
+            TimeUnit.SECONDS.sleep(2);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
+        // Detener el procesador de notificaciones
+        procesadorNotificaciones.detener();
+        System.out.println("\nProcesador de notificaciones detenido.");
+        
         System.out.println("\nSistema finalizado.");
+    }
+    
+    private static void demonstrarNotificacionesConcurrentes(
+            ProcesadorNotificaciones procesador, GestorUsuarios gestorUsuarios) {
+        try {
+            // Obtener todos los usuarios para notificar
+            List<Usuario> usuarios = gestorUsuarios.listarUsuarios();
+            System.out.println("Enviando notificaciones concurrentes a " + usuarios.size() + " usuarios");
+            
+            // Enviar varias notificaciones para demostrar concurrencia
+            for (Usuario usuario : usuarios) {
+                // Notificaciones de email
+                procesador.encolarNotificacion(
+                    usuario, 
+                    "Aviso importante: Mantenimiento del sistema este fin de semana", 
+                    "email",
+                    3  // Prioridad alta
+                );
+                
+                procesador.encolarNotificacion(
+                    usuario, 
+                    "Nuevos recursos disponibles en su categoría de interés", 
+                    "email",
+                    5  // Prioridad media
+                );
+                
+                // Notificaciones SMS (priorizadas)
+                procesador.encolarNotificacion(
+                    usuario, 
+                    "Recordatorio: tiene préstamos por vencer", 
+                    "sms",
+                    2  // Alta prioridad 
+                );
+            }
+            
+            // Mostrar notificaciones pendientes
+            System.out.println("Notificaciones en cola para procesar: " + 
+                    procesador.getNotificacionesPendientes());
+            
+            // Para mostrar la concurrencia en acción, haremos un pequeño sleep
+            // y luego avisaremos cuántas quedan
+            TimeUnit.SECONDS.sleep(1);
+            System.out.println("Después de 1 segundo, quedan " + 
+                    procesador.getNotificacionesPendientes() + " notificaciones en cola");
+            
+        } catch (Exception e) {
+            System.out.println("Error al procesar notificaciones concurrentes: " + e.getMessage());
+        }
     }
     
     private static void crearDatosEjemplo(GestorUsuarios gestorUsuarios, GestorRecursos gestorRecursos) {
