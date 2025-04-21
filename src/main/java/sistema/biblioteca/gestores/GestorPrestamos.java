@@ -153,4 +153,8 @@ public class GestorPrestamos {
     public int getCantidadPrestamosVencidos() {
         return listarPrestamosVencidos().size();
     }
+    
+    public List<Prestamo> listarTodosLosPrestamos() {
+        return new ArrayList<>(prestamos.values());
+    }
 } 
