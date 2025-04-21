@@ -157,4 +157,37 @@ public class GestorPrestamos {
     public List<Prestamo> listarTodosLosPrestamos() {
         return new ArrayList<>(prestamos.values());
     }
+    
+    /**
+     * Renueva un préstamo extendiendo su fecha de devolución
+     * @param idPrestamo ID del préstamo a renovar
+     * @param diasExtension Cantidad de días a extender el préstamo
+     * @throws IllegalArgumentException si el préstamo no existe o no está activo
+     */
+    public void renovarPrestamo(String idPrestamo, int diasExtension) {
+        if (diasExtension <= 0) {
+            throw new IllegalArgumentException("Los días de extensión deben ser positivos");
+        }
+        
+        Prestamo prestamo = prestamos.get(idPrestamo);
+        
+        if (prestamo == null) {
+            throw new IllegalArgumentException("El préstamo con ID " + idPrestamo + " no existe");
+        }
+        
+        if (!prestamo.isActivo()) {
+            throw new IllegalArgumentException("El préstamo ya ha sido devuelto y no puede renovarse");
+        }
+        
+        // Calcular nueva fecha de devolución
+        LocalDateTime nuevaFechaDevolucion = prestamo.getFechaDevolucionEstimada().plusDays(diasExtension);
+        prestamo.setFechaDevolucionEstimada(nuevaFechaDevolucion);
+        
+        // Notificar al usuario
+        String mensaje = "Tu préstamo para " + prestamo.getRecurso().getTitulo() + 
+                " ha sido renovado. Nueva fecha de devolución: " + 
+                nuevaFechaDevolucion.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        
+        servicioNotificaciones.enviarNotificacion(prestamo.getUsuario(), mensaje);
+    }
 } 
