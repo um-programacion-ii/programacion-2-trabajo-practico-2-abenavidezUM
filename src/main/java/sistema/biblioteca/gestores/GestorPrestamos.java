@@ -162,9 +162,10 @@ public class GestorPrestamos {
      * Renueva un préstamo extendiendo su fecha de devolución
      * @param idPrestamo ID del préstamo a renovar
      * @param diasExtension Cantidad de días a extender el préstamo
+     * @param motivo Motivo de la renovación (opcional)
      * @throws IllegalArgumentException si el préstamo no existe o no está activo
      */
-    public void renovarPrestamo(String idPrestamo, int diasExtension) {
+    public void renovarPrestamo(String idPrestamo, int diasExtension, String motivo) {
         if (diasExtension <= 0) {
             throw new IllegalArgumentException("Los días de extensión deben ser positivos");
         }
@@ -179,15 +180,69 @@ public class GestorPrestamos {
             throw new IllegalArgumentException("El préstamo ya ha sido devuelto y no puede renovarse");
         }
         
-        // Calcular nueva fecha de devolución
-        LocalDateTime nuevaFechaDevolucion = prestamo.getFechaDevolucionEstimada().plusDays(diasExtension);
-        prestamo.setFechaDevolucionEstimada(nuevaFechaDevolucion);
+        // Aplicar la renovación utilizando el nuevo método
+        prestamo.renovar(diasExtension, motivo != null ? motivo : "Renovación estándar");
         
         // Notificar al usuario
         String mensaje = "Tu préstamo para " + prestamo.getRecurso().getTitulo() + 
                 " ha sido renovado. Nueva fecha de devolución: " + 
-                nuevaFechaDevolucion.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                prestamo.getFechaDevolucionEstimada().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
         
         servicioNotificaciones.enviarNotificacion(prestamo.getUsuario(), mensaje);
+    }
+    
+    /**
+     * Sobrecarga del método renovarPrestamo sin motivo
+     */
+    public void renovarPrestamo(String idPrestamo, int diasExtension) {
+        renovarPrestamo(idPrestamo, diasExtension, null);
+    }
+    
+    /**
+     * Obtiene el historial de renovaciones de un préstamo
+     * @param idPrestamo ID del préstamo
+     * @return Lista con el historial de renovaciones
+     * @throws IllegalArgumentException si el préstamo no existe
+     */
+    public List<HistorialRenovacion> obtenerHistorialRenovaciones(String idPrestamo) {
+        Prestamo prestamo = prestamos.get(idPrestamo);
+        
+        if (prestamo == null) {
+            throw new IllegalArgumentException("El préstamo con ID " + idPrestamo + " no existe");
+        }
+        
+        return prestamo.getHistorialRenovaciones();
+    }
+    
+    /**
+     * Obtiene la cantidad de renovaciones de un préstamo
+     * @param idPrestamo ID del préstamo
+     * @return Cantidad de renovaciones
+     * @throws IllegalArgumentException si el préstamo no existe
+     */
+    public int obtenerCantidadRenovaciones(String idPrestamo) {
+        Prestamo prestamo = prestamos.get(idPrestamo);
+        
+        if (prestamo == null) {
+            throw new IllegalArgumentException("El préstamo con ID " + idPrestamo + " no existe");
+        }
+        
+        return prestamo.getCantidadRenovaciones();
+    }
+    
+    /**
+     * Devuelve una lista de todos los préstamos que han sido renovados al menos una vez
+     * @return Lista de préstamos renovados
+     */
+    public List<Prestamo> listarPrestamosRenovados() {
+        List<Prestamo> renovados = new ArrayList<>();
+        
+        for (Prestamo prestamo : prestamos.values()) {
+            if (prestamo.getCantidadRenovaciones() > 0) {
+                renovados.add(prestamo);
+            }
+        }
+        
+        return renovados;
     }
 } 

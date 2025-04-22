@@ -2,6 +2,8 @@ package sistema.biblioteca.modelos;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Prestamo {
     private String id;
@@ -11,6 +13,8 @@ public class Prestamo {
     private LocalDateTime fechaDevolucionEstimada;
     private LocalDateTime fechaDevolucionReal;
     private boolean activo;
+    private int cantidadRenovaciones;
+    private List<HistorialRenovacion> historialRenovaciones;
     
     public Prestamo(String id, RecursoBase recurso, Usuario usuario) {
         this.id = id;
@@ -19,6 +23,8 @@ public class Prestamo {
         this.fechaPrestamo = LocalDateTime.now();
         this.fechaDevolucionEstimada = calcularFechaDevolucionEstimada(recurso);
         this.activo = true;
+        this.cantidadRenovaciones = 0;
+        this.historialRenovaciones = new ArrayList<>();
     }
     
     public String getId() {
@@ -39,6 +45,10 @@ public class Prestamo {
     
     public LocalDateTime getFechaDevolucionEstimada() {
         return fechaDevolucionEstimada;
+    }
+    
+    public void setFechaDevolucionEstimada(LocalDateTime fechaDevolucionEstimada) {
+        this.fechaDevolucionEstimada = fechaDevolucionEstimada;
     }
     
     public LocalDateTime getFechaDevolucionReal() {
@@ -80,6 +90,35 @@ public class Prestamo {
         return recurso.calcularFechaDevolucion();
     }
     
+    public int getCantidadRenovaciones() {
+        return cantidadRenovaciones;
+    }
+    
+    public List<HistorialRenovacion> getHistorialRenovaciones() {
+        return new ArrayList<>(historialRenovaciones);
+    }
+    
+    public void renovar(int diasExtension, String motivo) {
+        if (!isActivo()) {
+            throw new IllegalStateException("No se puede renovar un préstamo que ya fue devuelto");
+        }
+        
+        LocalDateTime fechaAnterior = this.fechaDevolucionEstimada;
+        LocalDateTime nuevaFecha = fechaAnterior.plusDays(diasExtension);
+        
+        // Registrar la renovación en el historial
+        HistorialRenovacion renovacion = new HistorialRenovacion(
+            fechaAnterior, 
+            nuevaFecha, 
+            diasExtension,
+            motivo
+        );
+        
+        this.historialRenovaciones.add(renovacion);
+        this.fechaDevolucionEstimada = nuevaFecha;
+        this.cantidadRenovaciones++;
+    }
+    
     @Override
     public String toString() {
         return "Prestamo{" +
@@ -90,6 +129,7 @@ public class Prestamo {
                 ", fechaDevolucionEstimada=" + fechaDevolucionEstimada +
                 ", fechaDevolucionReal=" + fechaDevolucionReal +
                 ", activo=" + activo +
+                ", renovaciones=" + cantidadRenovaciones +
                 '}';
     }
 } 

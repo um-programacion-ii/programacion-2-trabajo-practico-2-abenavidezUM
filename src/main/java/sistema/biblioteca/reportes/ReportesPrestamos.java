@@ -202,13 +202,63 @@ public class ReportesPrestamos {
     public Map<String, Object> generarEstadisticasRenovaciones() {
         Map<String, Object> estadisticas = new HashMap<>();
         
-        // Aquí iría la lógica para calcular renovaciones
-        // Como aún no tenemos esa información en el modelo, devolvemos datos simulados
+        // Obtener préstamos renovados
+        List<Prestamo> prestamosRenovados = gestorPrestamos.listarPrestamosRenovados();
+        int totalPrestamos = gestorPrestamos.getCantidadPrestamosTotales();
         
-        estadisticas.put("totalPrestamos", gestorPrestamos.getCantidadPrestamosTotales());
-        estadisticas.put("prestamosRenovados", 0);
-        estadisticas.put("tasaRenovacion", 0.0);
-        estadisticas.put("tipoRecursoMasRenovado", "Libro");
+        // Calcular tasa de renovación
+        double tasaRenovacion = totalPrestamos > 0 ? 
+                (double) prestamosRenovados.size() / totalPrestamos * 100 : 0;
+        
+        // Contar renovaciones por tipo de recurso
+        Map<String, Integer> renovacionesPorTipo = new HashMap<>();
+        Map<String, Integer> cantidadPorTipo = new HashMap<>();
+        
+        for (Prestamo prestamo : prestamosRenovados) {
+            String tipoRecurso = prestamo.getRecurso().getClass().getSimpleName();
+            
+            // Contar cantidad de renovaciones por tipo
+            renovacionesPorTipo.put(
+                tipoRecurso, 
+                renovacionesPorTipo.getOrDefault(tipoRecurso, 0) + prestamo.getCantidadRenovaciones()
+            );
+            
+            // Contar cantidad de préstamos renovados por tipo
+            cantidadPorTipo.put(
+                tipoRecurso,
+                cantidadPorTipo.getOrDefault(tipoRecurso, 0) + 1
+            );
+        }
+        
+        // Encontrar el tipo más renovado (por cantidad de renovaciones)
+        String tipoMasRenovado = "Ninguno";
+        int maxRenovaciones = 0;
+        
+        for (Map.Entry<String, Integer> entry : renovacionesPorTipo.entrySet()) {
+            if (entry.getValue() > maxRenovaciones) {
+                maxRenovaciones = entry.getValue();
+                tipoMasRenovado = entry.getKey();
+            }
+        }
+        
+        // Calcular promedio de renovaciones por préstamo
+        double promedioRenovaciones = prestamosRenovados.isEmpty() ? 0 :
+                prestamosRenovados.stream()
+                        .mapToInt(Prestamo::getCantidadRenovaciones)
+                        .average()
+                        .orElse(0);
+        
+        // Armar estadísticas
+        estadisticas.put("totalPrestamos", totalPrestamos);
+        estadisticas.put("prestamosRenovados", prestamosRenovados.size());
+        estadisticas.put("totalRenovaciones", prestamosRenovados.stream()
+                .mapToInt(Prestamo::getCantidadRenovaciones)
+                .sum());
+        estadisticas.put("tasaRenovacion", tasaRenovacion);
+        estadisticas.put("promedioRenovacionesPorPrestamo", promedioRenovaciones);
+        estadisticas.put("tipoRecursoMasRenovado", tipoMasRenovado);
+        estadisticas.put("renovacionesPorTipo", renovacionesPorTipo);
+        estadisticas.put("prestamosRenovadosPorTipo", cantidadPorTipo);
         
         return estadisticas;
     }

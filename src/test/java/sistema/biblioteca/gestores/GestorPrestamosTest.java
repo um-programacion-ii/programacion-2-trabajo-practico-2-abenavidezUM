@@ -331,4 +331,100 @@ public class GestorPrestamosTest {
         assertEquals(2, todosLosPrestamos.size());
         assertEquals(1, gestorPrestamos.listarPrestamosActivos().size());
     }
+    
+    @Test
+    public void testRenovarPrestamoConMotivo() throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        // Crear préstamo
+        Prestamo prestamo = gestorPrestamos.crearPrestamo("L001", "U001");
+        String idPrestamo = prestamo.getId();
+        
+        // Guardar fecha inicial de devolución
+        var fechaDevolucionOriginal = prestamo.getFechaDevolucionEstimada();
+        
+        // Renovar préstamo con motivo
+        String motivo = "Necesidad de más tiempo para leer";
+        gestorPrestamos.renovarPrestamo(idPrestamo, 7, motivo);
+        
+        // Verificar que la fecha de devolución se ha extendido
+        assertTrue(prestamo.getFechaDevolucionEstimada().isAfter(fechaDevolucionOriginal));
+        
+        // Verificar historial
+        assertEquals(1, prestamo.getCantidadRenovaciones());
+        
+        // Verificar que el motivo se guardó correctamente
+        var historial = gestorPrestamos.obtenerHistorialRenovaciones(idPrestamo);
+        assertEquals(1, historial.size());
+        assertEquals(motivo, historial.get(0).getMotivo());
+        assertEquals(7, historial.get(0).getDiasExtendidos());
+    }
+    
+    @Test
+    public void testMultiplesRenovaciones() throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        // Crear préstamo
+        Prestamo prestamo = gestorPrestamos.crearPrestamo("L001", "U001");
+        String idPrestamo = prestamo.getId();
+        
+        // Realizar múltiples renovaciones
+        gestorPrestamos.renovarPrestamo(idPrestamo, 3, "Primera renovación");
+        gestorPrestamos.renovarPrestamo(idPrestamo, 5, "Segunda renovación");
+        gestorPrestamos.renovarPrestamo(idPrestamo, 2, "Tercera renovación");
+        
+        // Verificar cantidad de renovaciones
+        assertEquals(3, prestamo.getCantidadRenovaciones());
+        assertEquals(3, gestorPrestamos.obtenerCantidadRenovaciones(idPrestamo));
+        
+        // Verificar historial completo
+        var historial = gestorPrestamos.obtenerHistorialRenovaciones(idPrestamo);
+        assertEquals(3, historial.size());
+        
+        // Verificar que los motivos y días se guardaron correctamente
+        assertEquals("Primera renovación", historial.get(0).getMotivo());
+        assertEquals(3, historial.get(0).getDiasExtendidos());
+        
+        assertEquals("Segunda renovación", historial.get(1).getMotivo());
+        assertEquals(5, historial.get(1).getDiasExtendidos());
+        
+        assertEquals("Tercera renovación", historial.get(2).getMotivo());
+        assertEquals(2, historial.get(2).getDiasExtendidos());
+    }
+    
+    @Test
+    public void testListarPrestamosRenovados() throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        // Crear varios préstamos
+        Prestamo p1 = gestorPrestamos.crearPrestamo("L001", "U001");
+        
+        // Crear usuario adicional y recurso adicional
+        Usuario usuario2 = new Usuario("U002", "Usuario 2", "usuario2@test.com");
+        gestorUsuarios.registrarUsuario(usuario2);
+        
+        Libro libro2 = new Libro("L002", "Libro 2", "Autor 2", "9876543210", CategoriaRecurso.ACADEMICO);
+        gestorRecursos.agregarRecurso(libro2);
+        
+        Prestamo p2 = gestorPrestamos.crearPrestamo("L002", "U002");
+        
+        // Renovar solo uno de los préstamos
+        gestorPrestamos.renovarPrestamo(p1.getId(), 5, "Test renovación");
+        
+        // Verificar que solo aparece un préstamo en la lista de renovados
+        List<Prestamo> renovados = gestorPrestamos.listarPrestamosRenovados();
+        assertEquals(1, renovados.size());
+        assertEquals(p1.getId(), renovados.get(0).getId());
+    }
+    
+    @Test
+    public void testNoSePuedeRenovarPrestamoDevuelto() throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        // Crear préstamo
+        Prestamo prestamo = gestorPrestamos.crearPrestamo("L001", "U001");
+        String idPrestamo = prestamo.getId();
+        
+        // Devolver el préstamo
+        gestorPrestamos.devolverPrestamo(idPrestamo);
+        
+        // Intentar renovar un préstamo ya devuelto
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            gestorPrestamos.renovarPrestamo(idPrestamo, 7, "No debería funcionar");
+        });
+        
+        assertTrue(exception.getMessage().contains("ya ha sido devuelto"));
+    }
 } 
