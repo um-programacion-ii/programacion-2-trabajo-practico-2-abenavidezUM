@@ -300,4 +300,35 @@ public class GestorPrestamosTest {
             assertTrue(gestorRecursos.estaDisponible("L" + (2000 + i)));
         }
     }
+    
+    @Test
+    public void testListarTodosLosPrestamos() throws RecursoNoDisponibleException, UsuarioNoEncontradoException {
+        // Verificar que inicialmente no hay préstamos
+        assertEquals(0, gestorPrestamos.listarTodosLosPrestamos().size());
+        
+        // Crear usuario adicional y libro adicional
+        Usuario usuario2 = new Usuario("U002", "Usuario 2", "usuario2@test.com");
+        gestorUsuarios.registrarUsuario(usuario2);
+        
+        Libro libro2 = new Libro("L002", "Libro 2", "Autor 2", "9876543210", CategoriaRecurso.ACADEMICO);
+        gestorRecursos.agregarRecurso(libro2);
+        
+        // Crear dos préstamos
+        Prestamo p1 = gestorPrestamos.crearPrestamo("L001", "U001");
+        Prestamo p2 = gestorPrestamos.crearPrestamo("L002", "U002");
+        
+        // Verificar que hay dos préstamos en total
+        List<Prestamo> todosLosPrestamos = gestorPrestamos.listarTodosLosPrestamos();
+        assertEquals(2, todosLosPrestamos.size());
+        assertTrue(todosLosPrestamos.contains(p1));
+        assertTrue(todosLosPrestamos.contains(p2));
+        
+        // Devolver un préstamo
+        gestorPrestamos.devolverPrestamo(p1.getId());
+        
+        // Verificar que siguen existiendo dos préstamos en total (uno activo y uno devuelto)
+        todosLosPrestamos = gestorPrestamos.listarTodosLosPrestamos();
+        assertEquals(2, todosLosPrestamos.size());
+        assertEquals(1, gestorPrestamos.listarPrestamosActivos().size());
+    }
 } 
