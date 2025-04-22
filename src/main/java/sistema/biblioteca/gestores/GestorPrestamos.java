@@ -7,6 +7,7 @@ import sistema.biblioteca.modelos.Prestamo;
 import sistema.biblioteca.modelos.RecursoBase;
 import sistema.biblioteca.modelos.Usuario;
 import sistema.biblioteca.servicios.ServicioNotificaciones;
+import sistema.biblioteca.servicios.ValidadorRenovaciones;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ public class GestorPrestamos {
     private GestorRecursos gestorRecursos;
     private GestorUsuarios gestorUsuarios;
     private ServicioNotificaciones servicioNotificaciones;
+    private ValidadorRenovaciones validadorRenovaciones;
+    private GestorReglaRenovacion gestorReglaRenovacion;
     
     public GestorPrestamos(GestorRecursos gestorRecursos, GestorUsuarios gestorUsuarios,
                           ServicioNotificaciones servicioNotificaciones) {
@@ -28,6 +31,28 @@ public class GestorPrestamos {
         this.gestorRecursos = gestorRecursos;
         this.gestorUsuarios = gestorUsuarios;
         this.servicioNotificaciones = servicioNotificaciones;
+        
+        // Inicializar gestor de reglas y validador de renovaciones
+        this.gestorReglaRenovacion = new GestorReglaRenovacion();
+        this.validadorRenovaciones = null; // Se configura con setValidadorRenovaciones
+    }
+    
+    /**
+     * Configura el validador de renovaciones para este gestor
+     * 
+     * @param validadorRenovaciones El validador a utilizar
+     */
+    public void setValidadorRenovaciones(ValidadorRenovaciones validadorRenovaciones) {
+        this.validadorRenovaciones = validadorRenovaciones;
+    }
+    
+    /**
+     * Obtiene el gestor de reglas de renovación
+     * 
+     * @return El gestor de reglas
+     */
+    public GestorReglaRenovacion getGestorReglaRenovacion() {
+        return gestorReglaRenovacion;
     }
     
     public Prestamo crearPrestamo(String idRecurso, String idUsuario) 
@@ -163,9 +188,10 @@ public class GestorPrestamos {
      * @param idPrestamo ID del préstamo a renovar
      * @param diasExtension Cantidad de días a extender el préstamo
      * @param motivo Motivo de la renovación (opcional)
-     * @throws IllegalArgumentException si el préstamo no existe o no está activo
+     * @param forzarRenovacion Si es true, ignora algunas validaciones (solo para admin)
+     * @throws IllegalArgumentException si el préstamo no existe o no se puede renovar
      */
-    public void renovarPrestamo(String idPrestamo, int diasExtension, String motivo) {
+    public void renovarPrestamo(String idPrestamo, int diasExtension, String motivo, boolean forzarRenovacion) {
         if (diasExtension <= 0) {
             throw new IllegalArgumentException("Los días de extensión deben ser positivos");
         }
@@ -176,8 +202,26 @@ public class GestorPrestamos {
             throw new IllegalArgumentException("El préstamo con ID " + idPrestamo + " no existe");
         }
         
-        if (!prestamo.isActivo()) {
-            throw new IllegalArgumentException("El préstamo ya ha sido devuelto y no puede renovarse");
+        // Si no hay validador configurado, usar validación simple
+        if (validadorRenovaciones == null) {
+            if (!prestamo.isActivo()) {
+                throw new IllegalArgumentException("El préstamo ya ha sido devuelto y no puede renovarse");
+            }
+        } else if (!forzarRenovacion) {
+            // Usar el validador para verificar reglas complejas
+            ValidadorRenovaciones.ResultadoValidacion resultado = 
+                    validadorRenovaciones.validarRenovacion(prestamo);
+            
+            if (!resultado.isRenovacionPermitida()) {
+                throw new IllegalArgumentException(
+                    "No se puede renovar el préstamo por los siguientes motivos:\n" + 
+                    resultado.getMensajesRechazo());
+            }
+            
+            // Usar los días sugeridos si no se forzó un valor específico
+            if (diasExtension <= 0) {
+                diasExtension = resultado.getDiasSugeridos();
+            }
         }
         
         // Aplicar la renovación utilizando el nuevo método
@@ -192,10 +236,17 @@ public class GestorPrestamos {
     }
     
     /**
-     * Sobrecarga del método renovarPrestamo sin motivo
+     * Sobrecarga del método renovarPrestamo sin motivo y sin forzar
      */
     public void renovarPrestamo(String idPrestamo, int diasExtension) {
-        renovarPrestamo(idPrestamo, diasExtension, null);
+        renovarPrestamo(idPrestamo, diasExtension, null, false);
+    }
+    
+    /**
+     * Sobrecarga del método renovarPrestamo con motivo pero sin forzar
+     */
+    public void renovarPrestamo(String idPrestamo, int diasExtension, String motivo) {
+        renovarPrestamo(idPrestamo, diasExtension, motivo, false);
     }
     
     /**
