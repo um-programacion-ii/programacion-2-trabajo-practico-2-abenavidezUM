@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/tc38IXJF)
 # 📚 Trabajo Práctico: Sistema de Gestión de Biblioteca Digital (Java 21+)
 
 ## 📌 Objetivo General
@@ -5,7 +6,8 @@
 Desarrollar un sistema de gestión de biblioteca digital que implemente los cinco principios SOLID, programación orientada a objetos, y conceptos avanzados de Java. El sistema deberá manejar diferentes tipos de recursos digitales, préstamos, reservas, y notificaciones en tiempo real.
 
 ## 👨‍🎓 Información del Alumno
-- **Nombre y Apellido**: [Nombre y Apellido del Alumno]
+- **Nombre y Apellido**: Agustin Benavidez
+- **Legajo**: 62344
 
 ## 📋 Requisitos Adicionales
 
@@ -94,25 +96,28 @@ La guía debe ser clara, concisa y permitir a cualquier usuario entender y proba
 
 ### Ejemplos de Prueba
 1. **Flujo Completo de Préstamo**:
-   - Registrar un usuario
-   - Agregar un libro
-   - Realizar un préstamo
-   - Verificar el estado del recurso
-   - Devolver el recurso
-   - Verificar la actualización del estado
+   - Registrar un usuario: `Usuario usuario = new Usuario("Juan Perez", "juan@mail.com")`
+   - Agregar un libro: `Libro libro = new Libro("L001", "El Quijote", "Miguel de Cervantes", "Literatura")`
+   - Realizar un préstamo: `gestorPrestamos.crearPrestamo(usuario.getId(), libro.getIdentificador())`
+   - Verificar el estado del recurso: `libro.getEstado()` debería ser `PRESTADO`
+   - Devolver el recurso: `gestorPrestamos.devolverPrestamo(prestamoId)`
+   - Verificar la actualización del estado: `libro.getEstado()` debería ser `DISPONIBLE`
 
 2. **Sistema de Reservas**:
-   - Registrar dos usuarios
-   - Agregar un libro
-   - Realizar una reserva con cada usuario
-   - Verificar la cola de reservas
-   - Procesar las reservas
+   - Registrar dos usuarios: `Usuario usuario1 = new Usuario("Ana", "ana@mail.com")` y `Usuario usuario2 = new Usuario("Carlos", "carlos@mail.com")`
+   - Agregar un libro: `Libro libro = new Libro("L002", "Harry Potter", "J.K. Rowling", "Literatura")`
+   - Préstamo inicial: `gestorPrestamos.crearPrestamo(usuario1.getId(), libro.getIdentificador())`
+   - Realizar reservas: `colaReservas.agregarReserva(usuario2.getId(), libro.getIdentificador())`
+   - Verificar cola: `colaReservas.obtenerReservas(libro.getIdentificador())` debería mostrar a `usuario2`
+   - Procesar devolución: `gestorPrestamos.devolverPrestamo(prestamoId)`
+   - Verificar notificación: Se debe generar una notificación para `usuario2`
 
 3. **Alertas y Notificaciones**:
-   - Realizar un préstamo
-   - Esperar a que se acerque la fecha de vencimiento
-   - Verificar las alertas generadas
-   - Probar la renovación del préstamo
+   - Realizar un préstamo: `gestorPrestamos.crearPrestamo(usuarioId, recursoId)`
+   - Verificar fecha cercana: Usar `LocalDateTime.now().plusDays(15)` para simular acercamiento al vencimiento
+   - Alertas generadas: `servicioNotificaciones.obtenerNotificacionesPendientes(usuarioId)` debería contener alertas
+   - Renovar préstamo: `gestorPrestamos.renovarPrestamo(prestamoId, "Necesito más tiempo", validador)`
+   - Verificar nueva fecha: `prestamo.getFechaDevolucion()` debería mostrar la fecha extendida
 
 ## 🧩 Tecnologías y Herramientas
 
@@ -391,3 +396,129 @@ El uso inadecuado de IA puede resultar en:
 ## 📝 Licencia
 
 Este trabajo es parte del curso de Programación Avanzada de Ingeniería en Informática. Uso educativo únicamente.
+
+# Sistema de Gestión de Biblioteca Digital
+
+Este proyecto implementa un sistema completo de gestión de biblioteca que permite administrar préstamos, reservas, renovaciones y notificaciones para diferentes tipos de recursos.
+
+## Características principales
+
+- Gestión de usuarios
+- Gestión de recursos (libros, multimedia)
+- Sistema de préstamos y devoluciones
+- Cola de reservas para recursos no disponibles
+- Renovación de préstamos con reglas según categoría
+- Historial de renovaciones
+- Reportes y estadísticas
+- Notificaciones a usuarios
+
+## Requisitos
+
+- Java 21 o superior
+- Maven para gestión de dependencias
+
+## Instrucciones de uso
+
+### Ejecución del sistema
+
+Para ejecutar el sistema, compile el proyecto y ejecute la clase `Main`:
+
+```bash
+# Compilar el proyecto
+javac -d bin src/main/java/sistema/biblioteca/Main.java
+
+# Ejecutar el sistema
+java -cp bin sistema.biblioteca.Main
+```
+
+### Menú principal
+
+Al iniciar el sistema, se mostrará un menú con las siguientes opciones:
+
+1. **Iniciar sistema interactivo**: Accede al sistema completo con todas las funcionalidades
+2. **Ejecutar demostración**: Ejecuta un escenario automático para mostrar el funcionamiento
+3. **Salir**: Cierra la aplicación
+
+### Sistema interactivo
+
+Si selecciona la opción 1, accederá al sistema interactivo que ofrece las siguientes funcionalidades:
+
+1. **Mostrar Usuarios**: Muestra los usuarios registrados en el sistema
+2. **Mostrar Recursos**: Lista todos los recursos disponibles
+3. **Realizar Préstamo**: Permite registrar un nuevo préstamo
+4. **Devolver Préstamo**: Registra la devolución de un recurso
+5. **Renovar Préstamo**: Extiende la fecha de devolución de un préstamo
+6. **Mostrar Préstamos**: Muestra diferentes filtros de préstamos
+7. **Realizar Reserva**: Reserva un recurso que no está disponible
+8. **Mostrar Estadísticas**: Muestra datos y reportes del sistema
+9. **Ejecutar Escenario Completo**: Ejecuta una demostración automática
+0. **Salir**: Regresa al menú principal
+
+## Flujos de uso principales
+
+### Préstamo de un recurso
+
+1. Seleccione la opción 3 "Realizar Préstamo"
+2. Seleccione el ID del usuario
+3. Seleccione el ID del recurso disponible
+4. El sistema registrará el préstamo y asignará una fecha de devolución
+
+### Devolución de un recurso
+
+1. Seleccione la opción 4 "Devolver Préstamo"
+2. Elija el ID del préstamo que desea devolver
+3. El sistema registrará la devolución y actualizará el estado del recurso
+
+### Renovación de un préstamo
+
+1. Seleccione la opción 5 "Renovar Préstamo"
+2. Elija el ID del préstamo que desea renovar
+3. Introduzca el motivo de la renovación
+4. El sistema validará si es posible renovar según las reglas
+5. Si es posible, se extenderá la fecha de devolución
+
+### Reserva de un recurso
+
+1. Seleccione la opción 7 "Realizar Reserva"
+2. Elija el ID del usuario que realiza la reserva
+3. Seleccione el ID del recurso que desea reservar
+4. Si el recurso no está disponible, se registrará en la cola de reservas
+
+## Reglas de renovación
+
+El sistema aplica diferentes reglas según la categoría del recurso:
+
+- **Académico**: Máximo 3 renovaciones de 10 días cada una
+- **Literatura**: Máximo 2 renovaciones de 7 días cada una
+- **Histórico**: Máximo 1 renovación de 5 días (requiere autorización)
+- **Referencia**: Máximo 1 renovación de 3 días
+
+Además, existen restricciones generales:
+- No se permite renovar préstamos vencidos
+- No se permite renovar si hay reservas pendientes para ese recurso
+- No se puede renovar un préstamo ya devuelto
+
+## Limitaciones conocidas
+
+El sistema actual tiene algunas limitaciones que podrían mejorarse en versiones futuras:
+
+1. **Persistencia de datos**: Actualmente el sistema almacena los datos en memoria, por lo que se pierden al cerrar la aplicación. Una mejora futura sería implementar almacenamiento en base de datos.
+
+2. **Interfaz gráfica**: El sistema funciona por línea de comandos. Se podría mejorar la experiencia de usuario implementando una interfaz gráfica.
+
+3. **Notificaciones reales**: Las notificaciones solo se muestran en consola. En una versión futura podrían enviarse por email o SMS.
+
+## Componentes del sistema
+
+- `GestorUsuarios`: Administra los usuarios registrados
+- `GestorRecursos`: Maneja los diferentes tipos de recursos
+- `GestorPrestamos`: Controla los préstamos y devoluciones
+- `GestorReglaRenovacion`: Define las reglas de renovación
+- `ValidadorRenovaciones`: Valida las condiciones para renovar
+- `ColaReservas`: Gestiona las reservas de recursos
+- `ReportesPrestamos`: Genera estadísticas y reportes
+
+## Contacto
+
+Para más información, contacte con el equipo de desarrollo o directamente al desarrollador:
+- Email: agustin.benavidez@alumno.um.edu.ar
