@@ -11,89 +11,73 @@ import sistema.biblioteca.servicios.ProcesadorNotificaciones;
 import sistema.biblioteca.servicios.ServicioNotificacionesEmail;
 import sistema.biblioteca.servicios.ServicioNotificacionesSMS;
 import sistema.biblioteca.servicios.ServicioNotificaciones;
+import sistema.biblioteca.demo.DemoSistemaBiblioteca;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.Scanner;
 
+/**
+ * Clase principal del sistema de biblioteca
+ */
 public class Main {
-
+    
     public static void main(String[] args) {
-        System.out.println("Iniciando Sistema de Gestión de Biblioteca Digital");
+        System.out.println("======================================================");
+        System.out.println("      SISTEMA DE GESTIÓN DE BIBLIOTECA v1.0");
+        System.out.println("======================================================");
+        System.out.println("1. Iniciar sistema interactivo");
+        System.out.println("2. Ejecutar demostración");
+        System.out.println("0. Salir");
+        System.out.print("\nSeleccione una opción: ");
         
-        // Crear gestores
-        GestorUsuarios gestorUsuarios = new GestorUsuarios();
-        GestorRecursos gestorRecursos = new GestorRecursos();
+        Scanner scanner = new Scanner(System.in);
+        int opcion = -1;
         
-        // Crear servicios de notificaciones
-        ServicioNotificacionesEmail servicioEmail = new ServicioNotificacionesEmail();
-        ServicioNotificacionesSMS servicioSMS = new ServicioNotificacionesSMS();
-        
-        // Inicializar el procesador de notificaciones concurrente
-        ProcesadorNotificaciones procesadorNotificaciones = new ProcesadorNotificaciones();
-        
-        // Crear adaptadores para los servicios existentes
-        AdaptadorNotificaciones adaptadorEmail = new AdaptadorNotificaciones(
-                procesadorNotificaciones, "email", gestorUsuarios);
-        AdaptadorNotificaciones adaptadorSMS = new AdaptadorNotificaciones(
-                procesadorNotificaciones, "sms", gestorUsuarios);
-        
-        // Registrar los servicios en el procesador
-        procesadorNotificaciones.agregarServicio("email", servicioEmail);
-        procesadorNotificaciones.agregarServicio("sms", servicioSMS);
-        
-        // Crear gestor de préstamos usando el adaptador de notificaciones
-        GestorPrestamos gestorPrestamos = new GestorPrestamos(
-                gestorRecursos, gestorUsuarios, adaptadorEmail);
-        
-        // Crear algunos datos de ejemplo
-        crearDatosEjemplo(gestorUsuarios, gestorRecursos);
-        
-        // Mostrar usuarios y recursos
-        mostrarInformacionSistema(gestorUsuarios, gestorRecursos);
-        
-        // Realizar una búsqueda de ejemplo
-        System.out.println("\n--- Búsqueda de recursos por título 'Quijote' ---");
-        for (RecursoBase recurso : gestorRecursos.buscarRecursosPorTitulo("Quijote")) {
-            System.out.println(recurso);
-        }
-        
-        System.out.println("\n--- Búsqueda de usuarios por nombre 'García' ---");
-        for (Usuario usuario : gestorUsuarios.buscarUsuariosPorNombre("García")) {
-            System.out.println(usuario);
-            // Enviar notificaciones usando el adaptador (que usa el procesador concurrente)
-            adaptadorEmail.enviarNotificacion(usuario, "Bienvenido al sistema de biblioteca digital!");
-            adaptadorSMS.enviarNotificacion(usuario, "Nuevo sistema de notificaciones activado");
-        }
-        
-        // Demostrar notificaciones múltiples
-        System.out.println("\n--- Ejemplo de notificaciones concurrentes ---");
-        demonstrarNotificacionesConcurrentes(procesadorNotificaciones, gestorUsuarios);
-        
-        // Realizar operaciones de préstamo
         try {
-            realizarOperacionesPrestamo(gestorPrestamos);
-        } catch (Exception e) {
-            System.out.println("Error al realizar operaciones de préstamo: " + e.getMessage());
+            opcion = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            opcion = -1;
         }
         
-        // Mostrar ejemplo de reservas
-        mostrarEjemploReservas(gestorRecursos, gestorUsuarios);
-        
-        // Esperar a que terminen las notificaciones concurrentes
-        try {
-            System.out.println("\nEsperando a que se procesen las notificaciones...");
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        switch (opcion) {
+            case 1:
+                System.out.println("\nIniciando sistema interactivo...");
+                iniciarSistemaInteractivo();
+                break;
+            case 2:
+                System.out.println("\nIniciando demostración...");
+                iniciarDemostracion();
+                break;
+            case 0:
+                System.out.println("\n¡Gracias por utilizar el sistema!");
+                break;
+            default:
+                System.out.println("\nOpción inválida. Saliendo del sistema.");
         }
         
-        // Detener el procesador de notificaciones
-        procesadorNotificaciones.detener();
-        System.out.println("\nProcesador de notificaciones detenido.");
+        scanner.close();
+    }
+    
+    /**
+     * Inicia el sistema interactivo completo
+     */
+    private static void iniciarSistemaInteractivo() {
+        DemoSistemaBiblioteca demo = new DemoSistemaBiblioteca();
+        demo.ejecutar();
+    }
+    
+    /**
+     * Ejecuta un escenario de demostración no interactivo
+     */
+    private static void iniciarDemostracion() {
+        DemoSistemaBiblioteca demo = new DemoSistemaBiblioteca();
+        demo.ejecutarEscenarioCompleto();
         
-        System.out.println("\nSistema finalizado.");
+        System.out.println("\nPresione ENTER para salir...");
+        new Scanner(System.in).nextLine();
     }
     
     private static void demonstrarNotificacionesConcurrentes(

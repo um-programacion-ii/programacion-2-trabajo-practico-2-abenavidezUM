@@ -395,112 +395,115 @@ Este trabajo es parte del curso de Programación Avanzada de Ingeniería en Info
 
 # Sistema de Gestión de Biblioteca Digital
 
-Este proyecto implementa un sistema para gestionar una biblioteca digital con funcionalidades como categorización de recursos, préstamos y reservas básicas, búsquedas y notificaciones.
+Este proyecto implementa un sistema completo de gestión de biblioteca que permite administrar préstamos, reservas, renovaciones y notificaciones para diferentes tipos de recursos.
+
+## Características principales
+
+- Gestión de usuarios
+- Gestión de recursos (libros, multimedia)
+- Sistema de préstamos y devoluciones
+- Cola de reservas para recursos no disponibles
+- Renovación de préstamos con reglas según categoría
+- Historial de renovaciones
+- Reportes y estadísticas
+- Notificaciones a usuarios
 
 ## Requisitos
 
 - Java 21 o superior
-- Maven
+- Maven para gestión de dependencias
 
-## Estructura del proyecto
+## Instrucciones de uso
 
-El proyecto está organizado en varios paquetes:
+### Ejecución del sistema
 
-- `sistema.biblioteca.modelos`: Clases que representan los objetos del dominio (Usuario, Libro, Prestamo, Reserva, etc.)
-- `sistema.biblioteca.interfaces`: Interfaces que definen comportamientos comunes
-- `sistema.biblioteca.gestores`: Clases que implementan la lógica de negocio
-- `sistema.biblioteca.servicios`: Servicios para notificaciones
-- `sistema.biblioteca.excepciones`: Excepciones personalizadas
-
-## Cómo usar el sistema
-
-### Compilación
-
-Para compilar el proyecto, ejecuta:
+Para ejecutar el sistema, compile el proyecto y ejecute la clase `Main`:
 
 ```bash
-mvn clean package
+# Compilar el proyecto
+javac -d bin src/main/java/sistema/biblioteca/Main.java
+
+# Ejecutar el sistema
+java -cp bin sistema.biblioteca.Main
 ```
 
-### Ejecución
+### Menú principal
 
-Para ejecutar la aplicación, usa:
+Al iniciar el sistema, se mostrará un menú con las siguientes opciones:
 
-```bash
-java -cp target/gestion-biblioteca-1.0-SNAPSHOT.jar sistema.biblioteca.Main
-```
+1. **Iniciar sistema interactivo**: Accede al sistema completo con todas las funcionalidades
+2. **Ejecutar demostración**: Ejecuta un escenario automático para mostrar el funcionamiento
+3. **Salir**: Cierra la aplicación
 
-### Funcionalidades implementadas
+### Sistema interactivo
 
-1. **Gestión de Usuarios**
-   - Registrar usuarios
-   - Buscar usuarios por ID o nombre
+Si selecciona la opción 1, accederá al sistema interactivo que ofrece las siguientes funcionalidades:
 
-2. **Gestión de Recursos**
-   - Agregar diferentes tipos de recursos (libros, revistas, audiolibros)
-   - Buscar recursos por ID, título o categoría
-   - Consultar disponibilidad
+1. **Mostrar Usuarios**: Muestra los usuarios registrados en el sistema
+2. **Mostrar Recursos**: Lista todos los recursos disponibles
+3. **Realizar Préstamo**: Permite registrar un nuevo préstamo
+4. **Devolver Préstamo**: Registra la devolución de un recurso
+5. **Renovar Préstamo**: Extiende la fecha de devolución de un préstamo
+6. **Mostrar Préstamos**: Muestra diferentes filtros de préstamos
+7. **Realizar Reserva**: Reserva un recurso que no está disponible
+8. **Mostrar Estadísticas**: Muestra datos y reportes del sistema
+9. **Ejecutar Escenario Completo**: Ejecuta una demostración automática
+0. **Salir**: Regresa al menú principal
 
-3. **Sistema de Préstamos**
-   - Prestar recursos a usuarios
-   - Registrar devoluciones
-   - Verificar préstamos activos
-   - Manejo de errores para recursos no disponibles
+## Flujos de uso principales
 
-4. **Modelo de Reservas** *(Nuevo)*
-   - Creación de reservas para recursos
-   - Gestión de estados (pendiente, completada, expirada, cancelada)
-   - Control de fechas de expiración
-   - Extensión de reservas
+### Préstamo de un recurso
 
-5. **Notificaciones Básicas**
-   - Envío de notificaciones simuladas por email y SMS
+1. Seleccione la opción 3 "Realizar Préstamo"
+2. Seleccione el ID del usuario
+3. Seleccione el ID del recurso disponible
+4. El sistema registrará el préstamo y asignará una fecha de devolución
 
-## Ejemplo de uso básico
+### Devolución de un recurso
 
-```java
-// Crear gestores
-GestorUsuarios gestorUsuarios = new GestorUsuarios();
-GestorRecursos gestorRecursos = new GestorRecursos();
-ServicioNotificacionesEmail servicioEmail = new ServicioNotificacionesEmail();
-GestorPrestamos gestorPrestamos = new GestorPrestamos(gestorRecursos, gestorUsuarios, servicioEmail);
+1. Seleccione la opción 4 "Devolver Préstamo"
+2. Elija el ID del préstamo que desea devolver
+3. El sistema registrará la devolución y actualizará el estado del recurso
 
-// Registrar un usuario
-Usuario usuario = new Usuario("U001", "Juan Pérez", "juan@ejemplo.com");
-gestorUsuarios.registrarUsuario(usuario);
+### Renovación de un préstamo
 
-// Agregar un libro
-Libro libro = new Libro("L001", "Java Programming", "Author", "123456", CategoriaRecurso.ACADEMICO);
-gestorRecursos.agregarRecurso(libro);
+1. Seleccione la opción 5 "Renovar Préstamo"
+2. Elija el ID del préstamo que desea renovar
+3. Introduzca el motivo de la renovación
+4. El sistema validará si es posible renovar según las reglas
+5. Si es posible, se extenderá la fecha de devolución
 
-// Realizar un préstamo
-try {
-    Prestamo prestamo = gestorPrestamos.crearPrestamo("L001", "U001");
-    System.out.println("Préstamo realizado con éxito. Vence el: " + 
-        prestamo.getFechaDevolucionEstimada());
-} catch (Exception e) {
-    System.out.println("Error: " + e.getMessage());
-}
+### Reserva de un recurso
 
-// Crear una reserva para un recurso no disponible
-Reserva reserva = new Reserva("R001", libro, usuario, 5);
-System.out.println("Reserva creada con " + reserva.diasHastaExpiracion() + 
-    " días hasta expiración");
+1. Seleccione la opción 7 "Realizar Reserva"
+2. Elija el ID del usuario que realiza la reserva
+3. Seleccione el ID del recurso que desea reservar
+4. Si el recurso no está disponible, se registrará en la cola de reservas
 
-// Extender la reserva
-reserva.extenderExpiracion(3);
-System.out.println("Reserva extendida. Nueva expiración: " + 
-    reserva.getFechaExpiracion());
-```
+## Reglas de renovación
 
-## Próximas implementaciones
+El sistema aplica diferentes reglas según la categoría del recurso:
 
-En próximas versiones se implementarán funcionalidades adicionales como:
-- Sistema de colas de reservas con concurrencia
-- Notificaciones asincrónicas
-- Reportes estadísticos
-- Monitoreo automático de vencimientos
+- **Académico**: Máximo 3 renovaciones de 10 días cada una
+- **Literatura**: Máximo 2 renovaciones de 7 días cada una
+- **Histórico**: Máximo 1 renovación de 5 días (requiere autorización)
+- **Referencia**: Máximo 1 renovación de 3 días
+
+Además, existen restricciones generales:
+- No se permite renovar préstamos vencidos
+- No se permite renovar si hay reservas pendientes para ese recurso
+- No se puede renovar un préstamo ya devuelto
+
+## Componentes del sistema
+
+- `GestorUsuarios`: Administra los usuarios registrados
+- `GestorRecursos`: Maneja los diferentes tipos de recursos
+- `GestorPrestamos`: Controla los préstamos y devoluciones
+- `GestorReglaRenovacion`: Define las reglas de renovación
+- `ValidadorRenovaciones`: Valida las condiciones para renovar
+- `ColaReservas`: Gestiona las reservas de recursos
+- `ReportesPrestamos`: Genera estadísticas y reportes
 
 ## Contacto
 
-Si tenés dudas o consultas sobre el sistema, contactame a través de mi mail universitario.
+Para más información, contacte con el equipo de desarrollo.
