@@ -6,7 +6,8 @@
 Desarrollar un sistema de gestión de biblioteca digital que implemente los cinco principios SOLID, programación orientada a objetos, y conceptos avanzados de Java. El sistema deberá manejar diferentes tipos de recursos digitales, préstamos, reservas, y notificaciones en tiempo real.
 
 ## 👨‍🎓 Información del Alumno
-- **Nombre y Apellido**: [Nombre y Apellido del Alumno]
+- **Nombre y Apellido**: Agustin Benavidez
+- **Legajo**: 62344
 
 ## 📋 Requisitos Adicionales
 
@@ -95,25 +96,28 @@ La guía debe ser clara, concisa y permitir a cualquier usuario entender y proba
 
 ### Ejemplos de Prueba
 1. **Flujo Completo de Préstamo**:
-   - Registrar un usuario
-   - Agregar un libro
-   - Realizar un préstamo
-   - Verificar el estado del recurso
-   - Devolver el recurso
-   - Verificar la actualización del estado
+   - Registrar un usuario: `Usuario usuario = new Usuario("Juan Perez", "juan@mail.com")`
+   - Agregar un libro: `Libro libro = new Libro("L001", "El Quijote", "Miguel de Cervantes", "Literatura")`
+   - Realizar un préstamo: `gestorPrestamos.crearPrestamo(usuario.getId(), libro.getIdentificador())`
+   - Verificar el estado del recurso: `libro.getEstado()` debería ser `PRESTADO`
+   - Devolver el recurso: `gestorPrestamos.devolverPrestamo(prestamoId)`
+   - Verificar la actualización del estado: `libro.getEstado()` debería ser `DISPONIBLE`
 
 2. **Sistema de Reservas**:
-   - Registrar dos usuarios
-   - Agregar un libro
-   - Realizar una reserva con cada usuario
-   - Verificar la cola de reservas
-   - Procesar las reservas
+   - Registrar dos usuarios: `Usuario usuario1 = new Usuario("Ana", "ana@mail.com")` y `Usuario usuario2 = new Usuario("Carlos", "carlos@mail.com")`
+   - Agregar un libro: `Libro libro = new Libro("L002", "Harry Potter", "J.K. Rowling", "Literatura")`
+   - Préstamo inicial: `gestorPrestamos.crearPrestamo(usuario1.getId(), libro.getIdentificador())`
+   - Realizar reservas: `colaReservas.agregarReserva(usuario2.getId(), libro.getIdentificador())`
+   - Verificar cola: `colaReservas.obtenerReservas(libro.getIdentificador())` debería mostrar a `usuario2`
+   - Procesar devolución: `gestorPrestamos.devolverPrestamo(prestamoId)`
+   - Verificar notificación: Se debe generar una notificación para `usuario2`
 
 3. **Alertas y Notificaciones**:
-   - Realizar un préstamo
-   - Esperar a que se acerque la fecha de vencimiento
-   - Verificar las alertas generadas
-   - Probar la renovación del préstamo
+   - Realizar un préstamo: `gestorPrestamos.crearPrestamo(usuarioId, recursoId)`
+   - Verificar fecha cercana: Usar `LocalDateTime.now().plusDays(15)` para simular acercamiento al vencimiento
+   - Alertas generadas: `servicioNotificaciones.obtenerNotificacionesPendientes(usuarioId)` debería contener alertas
+   - Renovar préstamo: `gestorPrestamos.renovarPrestamo(prestamoId, "Necesito más tiempo", validador)`
+   - Verificar nueva fecha: `prestamo.getFechaDevolucion()` debería mostrar la fecha extendida
 
 ## 🧩 Tecnologías y Herramientas
 
@@ -494,6 +498,16 @@ Además, existen restricciones generales:
 - No se permite renovar si hay reservas pendientes para ese recurso
 - No se puede renovar un préstamo ya devuelto
 
+## Limitaciones conocidas
+
+El sistema actual tiene algunas limitaciones que podrían mejorarse en versiones futuras:
+
+1. **Persistencia de datos**: Actualmente el sistema almacena los datos en memoria, por lo que se pierden al cerrar la aplicación. Una mejora futura sería implementar almacenamiento en base de datos.
+
+2. **Interfaz gráfica**: El sistema funciona por línea de comandos. Se podría mejorar la experiencia de usuario implementando una interfaz gráfica.
+
+3. **Notificaciones reales**: Las notificaciones solo se muestran en consola. En una versión futura podrían enviarse por email o SMS.
+
 ## Componentes del sistema
 
 - `GestorUsuarios`: Administra los usuarios registrados
@@ -506,4 +520,5 @@ Además, existen restricciones generales:
 
 ## Contacto
 
-Para más información, contacte con el equipo de desarrollo.
+Para más información, contacte con el equipo de desarrollo o directamente al desarrollador:
+- Email: agustin.benavidez@alumno.um.edu.ar
